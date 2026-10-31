@@ -213,6 +213,7 @@ def metrics():
                 "SELECT severity, COUNT(*) AS n FROM incidents GROUP BY severity"
             )
         }
+        p1_active = conn.execute("SELECT COUNT(*) FROM incidents WHERE severity=? AND status!=?", ("P1", "resolved")).fetchone()[0]
         resolved = conn.execute(
             "SELECT created_at, resolved_at FROM incidents WHERE resolved_at IS NOT NULL"
         ).fetchall()
@@ -226,7 +227,7 @@ def metrics():
         "total": count,
         "active": sum(status_counts.get(s, 0) for s in ("open", "investigating", "mitigated")),
         "resolved": status_counts.get("resolved", 0),
-        "p1_active": severity_counts.get("P1", 0),
+        "p1_active": p1_active,
         "by_status": {s: status_counts.get(s, 0) for s in ("open", "investigating", "mitigated", "resolved")},
         "by_severity": {s: severity_counts.get(s, 0) for s in ("P1", "P2", "P3", "P4")},
         "mean_time_to_resolve_hours": round(sum(durations) / len(durations), 2) if durations else None,
