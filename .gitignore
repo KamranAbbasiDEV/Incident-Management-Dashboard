@@ -1,0 +1,25 @@
+# SQLite development data (do not publish incident records)
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+data/
+# Python / tests
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+dist/
+build/
+# Local environment / credentials
+.env
+.env.*
+*.pem
+*.key
+.DS_Store
+.idea/
+.vscode/
