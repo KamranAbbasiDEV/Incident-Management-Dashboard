@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1323">
+  <meta name="description" content="Local incident management and operations dashboard demonstration.">
+  <title>IncidentOps | Operations Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="IncidentOps dashboard">
+        <span class="brand-mark">IO</span>
+        <span><strong>IncidentOps</strong><small>OPERATIONS CONSOLE</small></span>
+      </a>
+      <div class="section-caption">WORKSPACE</div>
+      <nav aria-label="Primary navigation">
+        <a class="nav-link active" href="/" aria-current="page"><span class="nav-icon">▦</span> Overview</a>
+        <a class="nav-link" href="#incidents"><span class="nav-icon">≡</span> Incident queue</a>
+        <a class="nav-link" href="/docs" target="_blank" rel="noopener"><span class="nav-icon">⌘</span> API documentation ↗</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <span class="online-dot"></span> Local demonstration
+        <p>This app has no sign-in. Use synthetic incidents only; keep it on localhost.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumbs">Operations <span>/</span> Overview</div>
+        <div class="topbar-right">
+          <span class="env-pill"><span class="online-dot"></span> DEMO ENVIRONMENT</span>
+          <span class="avatar" aria-hidden="true">IO</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="page-head">
+          <div>
+            <div class="eyebrow">SERVICE RELIABILITY</div>
+            <h1>Incident overview</h1>
+            <p>Track operational incidents, review severity, and document resolution progress.</p>
+          </div>
+          <button type="button" id="newIncident" class="button primary"><span aria-hidden="true">+</span> New incident</button>
+        </section>
+
+        <section class="metric-grid" aria-label="Incident summary">
+          <article class="metric-card"><div class="metric-label">Total incidents <span>▤</span></div><div class="metric-number" id="metricTotal">—</div><div class="metric-help">All recorded incidents</div></article>
+          <article class="metric-card"><div class="metric-label">Active incidents <span>◉</span></div><div class="metric-number warn" id="metricActive">—</div><div class="metric-help">Open, investigating or mitigated</div></article>
+          <article class="metric-card"><div class="metric-label">Resolved <span>✓</span></div><div class="metric-number good" id="metricResolved">—</div><div class="metric-help">Closed operational records</div></article>
+          <article class="metric-card"><div class="metric-label">Mean resolution time <span>◷</span></div><div class="metric-number" id="metricMttr">—</div><div class="metric-help">Hours, from creation to resolution</div></article>
+        </section>
+
+        <section class="bottom-grid" aria-label="Status breakdown">
+          <article class="panel status-panel">
+            <div class="panel-header"><div><h2>Status distribution</h2><p>Incidents across lifecycle stages</p></div><span class="mini-tag">LIVE DATA</span></div>
+            <div id="statusBreakdown" class="breakdown-list" aria-live="polite"></div>
+          </article>
+          <article class="panel priority-panel">
+            <div class="panel-header"><div><h2>Priority overview</h2><p>Severity classification</p></div><span class="mini-tag">P1 — P4</span></div>
+            <div id="priorityBreakdown" class="priority-list"></div>
+            <p class="footnote">P1 critical · P2 high · P3 medium · P4 low</p>
+          </article>
+        </section>
+
+        <section class="panel incidents-panel" id="incidents">
+          <div class="panel-header table-header">
+            <div><h2>Incident queue</h2><p>Review, filter and manage your incidents.</p></div>
+            <button class="button outline" type="button" id="exportCsv">↓ Export CSV</button>
+          </div>
+          <div class="filters">
+            <label class="search-wrap"><span aria-hidden="true">⌕</span><span class="sr-only">Search incidents</span><input id="searchInput" type="search" placeholder="Search title, service, owner..." autocomplete="off"></label>
+            <label><span class="sr-only">Filter by status</span><select id="statusFilter"><option value="">All statuses</option><option value="open">Open</option><option value="investigating">Investigating</option><option value="mitigated">Mitigated</option><option value="resolved">Resolved</option></select></label>
+            <label><span class="sr-only">Filter by priority</span><select id="severityFilter"><option value="">All priorities</option><option value="P1">P1 — Critical</option><option value="P2">P2 — High</option><option value="P3">P3 — Medium</option><option value="P4">P4 — Low</option></select></label>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>INCIDENT</th><th>SERVICE</th><th>PRIORITY</th><th>STATUS</th><th>OWNER</th><th>CREATED</th><th></th></tr></thead>
+              <tbody id="incidentRows"><tr><td colspan="7" class="empty">Loading incidents…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-footer"><span id="queueCount">Loading…</span><span>Showing up to 100 records</span></div>
+        </section>
+
+        <footer>IncidentOps — Cloud Support Engineering Portfolio Lab <span>·</span> Local, single-user demonstration</footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="createDialog" class="modal">
+    <form id="createForm" class="modal-inner">
+      <div class="modal-head"><div><div class="eyebrow">INCIDENT TRACKING</div><h2>New incident</h2></div><button type="button" class="close" data-close="createDialog" aria-label="Close new incident dialog">×</button></div>
+      <div class="form-grid">
+        <label class="wide">Title <input name="title" required minlength="4" maxlength="120" placeholder="e.g. API response latency spike"></label>
+        <label>Service <input name="service" required minlength="2" maxlength="80" placeholder="e.g. Customer API"></label>
+        <label>Severity <select name="severity"><option value="P1">P1 — Critical</option><option value="P2">P2 — High</option><option selected value="P3">P3 — Medium</option><option value="P4">P4 — Low</option></select></label>
+        <label class="wide">Owner <input name="owner" maxlength="80" placeholder="e.g. Platform Support"></label>
+        <label class="wide">Description <textarea name="description" rows="4" maxlength="2000" placeholder="Describe the observed issue and impact (synthetic data only)"></textarea></label>
+      </div>
+      <p id="createError" class="error-text" role="alert"></p>
+      <div class="modal-actions"><button type="button" class="button outline" data-close="createDialog">Cancel</button><button type="submit" class="button primary">Create incident</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="detailDialog" class="modal wide-modal">
+    <div class="modal-inner">
+      <div class="modal-head"><div><div class="eyebrow" id="detailId">INCIDENT</div><h2 id="detailTitle">Loading…</h2></div><button type="button" class="close" data-close="detailDialog" aria-label="Close incident details">×</button></div>
+      <p class="description" id="detailDescription"></p>
+      <form id="detailForm">
+        <div class="form-grid">
+          <label>Status <select id="detailStatus" name="status"></select></label>
+          <label>Severity <select id="detailSeverity" name="severity"><option value="P1">P1 — Critical</option><option value="P2">P2 — High</option><option value="P3">P3 — Medium</option><option value="P4">P4 — Low</option></select></label>
+          <label>Owner <input id="detailOwner" name="owner" maxlength="80"></label>
+          <label>Service <input id="detailService" name="service" minlength="2" maxlength="80" required></label>
+        </div>
+        <p id="detailError" class="error-text" role="alert"></p>
+        <div class="modal-actions"><button type="submit" class="button primary">Save changes</button></div>
+      </form>
+      <div class="timeline-section">
+        <h3>Activity timeline</h3>
+        <div id="incidentTimeline" class="timeline"></div>
+        <form id="noteForm" class="note-form"><label class="sr-only" for="noteInput">Add a timeline note</label><input id="noteInput" minlength="3" maxlength="1000" required placeholder="Add a troubleshooting note (synthetic data)…"><button type="submit" class="button outline">Add note</button></form>
+        <p id="noteError" class="error-text" role="alert"></p>
+      </div>
+    </div>
+  </dialog>
+  <div class="toast" role="status" id="toast" aria-live="polite"></div>
+</body>
+</html>
